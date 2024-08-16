@@ -18,6 +18,19 @@ The app follows the MVVM (Model-View-ViewModel) architecture, which separates th
 - **View**: SwiftUI views that render the UI elements and respond to user interactions.
 - **ViewModel**: Manages the state of the views, handles user inputs, and interacts with the Model to fetch and update data.
 
+## Project Structure
+The project is organized to support maintainability, scalability, and testability:
+
+- **Utilities**: Shared code like extensions, constants, and network clients, centralised for reuse.
+- **Models**: Core data structures, such as `Photo` and `User`.
+- **Networking**: API handling and data fetching, kept separate for easy testing and modification.
+- **ViewModels**: Manages the state and logic for the views, adhering to the MVVM architecture.
+- **Views**: SwiftUI views organized by feature, with reusable components in a `Shared` subfolder.
+- **Resources**: Manages assets and localization files.
+
+### Scalability
+This structure is designed to adapt as the project grows, allowing for easy modularisation or feature-specific organization in the future.
+
 ## UI Layout and Design
 The app consists of the following screens:
 
