@@ -9,7 +9,8 @@ import XCTest
 @testable import PhotoExplorer
 
 final class PhotoTests: XCTestCase {
-    func testPhotoSummaryDecodesFromValidJSON() throws {
+    func testPhotoSummaryDecodingFromValidJSON() throws {
+        // A mock JSON with a valid structure
         let mockJSONData = """
         {
             "id": "12345",
@@ -21,6 +22,7 @@ final class PhotoTests: XCTestCase {
         let decoder = JSONDecoder()
         let photoSummary = try decoder.decode(PhotoSummary.self, from: mockJSONData)
         
+        // The decoded PhotoSummary should match the expected values
         XCTAssertEqual(photoSummary.id, "12345")
         XCTAssertEqual(photoSummary.title, "Sample Photo")
         XCTAssertEqual(photoSummary.thumbnailURL?.absoluteString, "https://example.com/photo.jpg")
