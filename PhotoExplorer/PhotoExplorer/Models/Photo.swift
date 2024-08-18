@@ -19,7 +19,7 @@ import Foundation
 /// We use it to decode the full JSON response and extract both the metadata and the array of photos.
 struct PhotoResponse: Decodable {
     let photos: PhotoContainer
-
+    
     /// `PhotoContainer` is a nested structure within `PhotoResponse` that holds the metadata about the photo search results.
     /// This includes pagination information such as the current page, total pages, and the number of photos per page.
     /// Additionally, it contains an array of `PhotoSummary` objects, which represent the individual photos returned by the search.
@@ -48,7 +48,7 @@ struct PhotoSummary: Decodable, Equatable, Identifiable {
     let id: String
     let title: String
     let thumbnailURL: URL?
-
+    
     enum CodingKeys: String, CodingKey {
         case id
         case title
@@ -56,12 +56,12 @@ struct PhotoSummary: Decodable, Equatable, Identifiable {
         case server
         case secret
     }
-
+    
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         id = try container.decode(String.self, forKey: .id)
         title = try container.decode(String.self, forKey: .title)
-
+        
         // Construct the thumbnail URL from the farm, server, id, and secret fields
         let farm = try container.decode(Int.self, forKey: .farm)
         let server = try container.decode(String.self, forKey: .server)
@@ -75,11 +75,65 @@ struct PhotoSummary: Decodable, Equatable, Identifiable {
         self.title = title
         self.thumbnailURL = thumbnailURL
     }
-
+    
     // Implement Equatable protocol to allow comparison in tests
     static func ==(lhs: PhotoSummary, rhs: PhotoSummary) -> Bool {
         return lhs.id == rhs.id &&
-               lhs.title == rhs.title &&
-               lhs.thumbnailURL == rhs.thumbnailURL
+        lhs.title == rhs.title &&
+        lhs.thumbnailURL == rhs.thumbnailURL
+    }
+}
+
+/// `PhotoDetail` represents the minimal detailed information of a photo fetched from the Flickr API.
+/// It contains only the most essential fields, such as the photo's ID, title, description, owner, date taken, and an image URL.
+struct PhotoDetail: Decodable {
+    let id: String
+    let title: String
+    let description: String
+    let owner: String
+    let dateTaken: String
+    let imageURL: URL?
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case title = "title._content"
+        case description = "description._content"
+        case owner = "owner.username"
+        case dateTaken = "dates.taken"
+        case urls
+    }
+    
+    enum URLKeys: String, CodingKey {
+        case url
+    }
+    
+    enum URLContentKeys: String, CodingKey {
+        case _content
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        
+        id = try container.decode(String.self, forKey: .id)
+        title = try container.decode(String.self, forKey: .title)
+        description = try container.decode(String.self, forKey: .description)
+        owner = try container.decode(String.self, forKey: .owner)
+        dateTaken = try container.decode(String.self, forKey: .dateTaken)
+        
+        // Decode the URL array and take the first URL (assuming it's the primary photo URL)
+        let urlsContainer = try container.nestedContainer(keyedBy: URLKeys.self, forKey: .urls)
+        var urlArray = try urlsContainer.nestedUnkeyedContainer(forKey: .url)
+        let urlContentContainer = try urlArray.nestedContainer(keyedBy: URLContentKeys.self)
+        imageURL = try urlContentContainer.decode(URL.self, forKey: ._content)
+    }
+    
+    /// Custom initializer to allow creating a `PhotoDetail` with modified properties, such as a formatted date.
+    init(id: String, title: String, description: String, owner: String, dateTaken: String, imageURL: URL?) {
+        self.id = id
+        self.title = title
+        self.description = description
+        self.owner = owner
+        self.dateTaken = dateTaken
+        self.imageURL = imageURL
     }
 }

@@ -38,7 +38,7 @@ final class PhotoServiceTests: XCTestCase {
                 "page": 1,
                 "pages": 1,
                 "perpage": 100,
-                "total": "1",
+                "total": 1,
                 "photo": [
                     {
                         "id": "12345",
@@ -93,6 +93,10 @@ final class PhotoServiceTests: XCTestCase {
     
     func testFetchPhotosInvalidURL() async {
         struct MockPhotoServiceWithInvalidURL: PhotoServiceProtocol {
+            func fetchPhotoDetail(for id: String) async throws -> PhotoExplorer.PhotoDetail {
+                throw NetworkError.invalidURL
+            }
+            
             func fetchPhotos() async throws -> [PhotoSummary] {
                 throw NetworkError.invalidURL
             }
