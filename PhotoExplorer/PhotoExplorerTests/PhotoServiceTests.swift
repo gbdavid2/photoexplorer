@@ -43,7 +43,9 @@ final class PhotoServiceTests: XCTestCase {
                     {
                         "id": "12345",
                         "title": "Sample Flickr Photo",
-                        "thumbnailURL": "https://flickr.com/photo.jpg"
+                        "farm": 66,
+                        "server": "65535",
+                        "secret": "abcdef"
                     }
                 ]
             }
@@ -55,9 +57,13 @@ final class PhotoServiceTests: XCTestCase {
         
         let photos = try await photoService.fetchPhotos()
         
+        // Expected thumbnail URL based on the `farm`, `server`, `secret`, and `id` fields
+        let expectedThumbnailURL = "https://farm66.staticflickr.com/65535/12345_abcdef_m.jpg"
+        
         XCTAssertEqual(photos.count, 1)
         XCTAssertEqual(photos.first?.id, "12345")
         XCTAssertEqual(photos.first?.title, "Sample Flickr Photo")
+        XCTAssertEqual(photos.first?.thumbnailURL?.absoluteString, expectedThumbnailURL)
     }
     
     func testFetchPhotosDecodingError() async {

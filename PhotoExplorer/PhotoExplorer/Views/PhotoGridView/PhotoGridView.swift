@@ -1,7 +1,8 @@
 import SwiftUI
 
-/// `PhotoGridView` is the main view that displays a grid of photos fetched from the Flickr API.
-/// It manages the overall layout, including a navigation bar, and handles loading/error states.
+/// `PhotoGridView` is a view that displays a scrollable grid of photos fetched from the Flickr API.
+/// It manages the loading and error states and presents the photo grid.
+/// Navigation and other UI elements are managed by the parent view that embeds this view.
 struct PhotoGridView: View {
     @StateObject private var viewModel: PhotoViewModel
 
@@ -12,26 +13,32 @@ struct PhotoGridView: View {
     }
 
     var body: some View {
-        NavigationView {
-            Group {
-                if viewModel.isLoading {
-                    ProgressView("Loading Photos...")
-                } else if let errorMessage = viewModel.errorMessage {
-                    Text(errorMessage)
-                        .foregroundColor(.red)
-                        .multilineTextAlignment(.center)
-                } else {
-                    // Ensuring the grid starts at the top
-                    ScrollView {
-                        PhotoGrid(photos: viewModel.photos)
+        Group {
+            if viewModel.isLoading {
+                ProgressView("Loading Photos...")
+            } else if let errorMessage = viewModel.errorMessage {
+                Text(errorMessage)
+                    .foregroundColor(.red)
+                    .multilineTextAlignment(.center)
+            } else {
+                ScrollView {
+                    LazyVGrid(columns: gridLayout, spacing: 20) {
+                        ForEach(viewModel.photos) { photo in
+                            PhotoTileView(photo: photo)
+                        }
                     }
+                    .padding()
                 }
             }
-            .navigationTitle("Photo Explorer")
-            .task {
-                await viewModel.fetchPhotos()
-            }
         }
+        .task {
+            await viewModel.fetchPhotos()
+        }
+    }
+
+    /// Defines the grid layout with three flexible columns.
+    private var gridLayout: [GridItem] {
+        [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())]
     }
 }
 
@@ -46,5 +53,4 @@ struct PhotoGridView: View {
 
     // Previewing the PhotoGridView with the mock view model.
     PhotoGridView(viewModel: mockViewModel)
-    
 }

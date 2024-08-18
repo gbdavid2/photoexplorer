@@ -12,7 +12,6 @@
 // while `Photo` is the model used within the app to work with this data.
 //
 
-
 import Foundation
 
 /// `PhotoResponse` represents the top-level response structure returned by the Flickr API when searching for photos.
@@ -28,7 +27,7 @@ struct PhotoResponse: Decodable {
         let page: Int
         let pages: Int
         let perpage: Int
-        let total: String
+        let total: Int
         let photo: [PhotoSummary]
     }
 }
@@ -44,7 +43,8 @@ struct Photo: Decodable {
 /// This struct is used primarily for decoding the API response for each photo summary.
 /// The decoded data will be used in an array of photos when launching the app.
 /// It is only `Decodable` because we don't need to send data back to the server or save to disk at this stage.
-struct PhotoSummary: Decodable, Equatable {
+/// `PhotoSummary` is `Identifiable` so that we can iterate over elements when required
+struct PhotoSummary: Decodable, Equatable, Identifiable {
     let id: String
     let title: String
     let thumbnailURL: URL?
@@ -52,7 +52,9 @@ struct PhotoSummary: Decodable, Equatable {
     enum CodingKeys: String, CodingKey {
         case id
         case title
-        case thumbnailURLString = "thumbnailURL"
+        case farm
+        case server
+        case secret
     }
 
     init(from decoder: Decoder) throws {
@@ -60,36 +62,22 @@ struct PhotoSummary: Decodable, Equatable {
         id = try container.decode(String.self, forKey: .id)
         title = try container.decode(String.self, forKey: .title)
 
-        let urlString = try container.decode(String.self, forKey: .thumbnailURLString)
-
-        if #available(iOS 17, *) {
-            // Use the stricter URL validation in iOS 17
-            if let url = URL(string: urlString, encodingInvalidCharacters: false),
-               url.scheme == "http" || url.scheme == "https" {
-                thumbnailURL = url
-            } else {
-                thumbnailURL = nil
-            }
-        } else {
-            // Fallback to the older URL initializer for iOS 16 and below
-            if let url = URL(string: urlString),
-               url.scheme == "http" || url.scheme == "https" {
-                thumbnailURL = url
-            } else {
-                thumbnailURL = nil
-            }
-        }
+        // Construct the thumbnail URL from the farm, server, id, and secret fields
+        let farm = try container.decode(Int.self, forKey: .farm)
+        let server = try container.decode(String.self, forKey: .server)
+        let secret = try container.decode(String.self, forKey: .secret)
+        thumbnailURL = URL(string: "https://farm\(farm).staticflickr.com/\(server)/\(id)_\(secret)_m.jpg")
     }
     
-    // Custom initializer for testing and other manual creation
+    // Custom initializer for testing and other manual creation (e.g. previews)
     init(id: String, title: String, thumbnailURL: URL?) {
         self.id = id
         self.title = title
         self.thumbnailURL = thumbnailURL
     }
-    
-    // Conforming to Equatable for comparison during tests
-    static func == (lhs: PhotoSummary, rhs: PhotoSummary) -> Bool {
+
+    // Implement Equatable protocol to allow comparison in tests
+    static func ==(lhs: PhotoSummary, rhs: PhotoSummary) -> Bool {
         return lhs.id == rhs.id &&
                lhs.title == rhs.title &&
                lhs.thumbnailURL == rhs.thumbnailURL

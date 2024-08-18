@@ -47,9 +47,7 @@ class PhotoViewModel: ObservableObject {
         
         do {
             let fetchedPhotos = try await photoService.fetchPhotos()
-                    print("Fetched Photos in ViewModel:", fetchedPhotos) // Debugging line
-                    photos = fetchedPhotos
-                    print("Photos in ViewModel after assignment:", photos) // Debugging line
+            photos = fetchedPhotos
         } catch {
             if let networkError = error as? NetworkError {
                 switch networkError {

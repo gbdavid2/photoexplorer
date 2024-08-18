@@ -8,37 +8,33 @@
 import SwiftUI
 
 struct ContentView: View {
-    
-    @State var showDetail: Bool = false
+    @State private var selectedPhoto: PhotoSummary?
     
     var body: some View {
-        ZStack {
-            Color(.background).ignoresSafeArea()
-            
-            if showDetail {
-                // TODO: Show detail instead of main content
-                content
-            } else {
-                content
-                    .background(
-                        Image(Constants.blob1)
-                            .offset(x: Constants.blobOffsetX, y: Constants.blobOffsetY)
-                            .accessibility(hidden: true)
-                    )
+        NavigationView {
+            ZStack {
+                Color(.background).ignoresSafeArea()
+                
+                if let selectedPhoto = selectedPhoto {
+                    // Detail view for the selected photo
+                    // PhotoDetailView(photo: selectedPhoto)
+                } else {
+                    content
+                }
             }
-            
-            
+            .navigationTitle("Photo Explorer")
+            .navigationBarTitleDisplayMode(.inline)
         }
     }
     
+    /// The main content of the view, displaying a grid of photos
     var content: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
-        }
-        .padding()
+        PhotoGridView(viewModel: PhotoViewModel())
+            .background(
+                Image(Constants.blob1)
+                    .offset(x: Constants.blobOffsetX, y: Constants.blobOffsetY)
+                    .accessibility(hidden: true)
+            )
     }
     
     enum Constants {
@@ -48,15 +44,11 @@ struct ContentView: View {
     }
 }
 
-
-
 #Preview {
     ContentView()
-
 }
 
 #Preview {
     ContentView()
         .preferredColorScheme(.dark)
 }
-
