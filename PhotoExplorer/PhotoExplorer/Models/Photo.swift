@@ -44,7 +44,7 @@ struct Photo: Decodable {
 /// This struct is used primarily for decoding the API response for each photo summary.
 /// The decoded data will be used in an array of photos when launching the app.
 /// It is only `Decodable` because we don't need to send data back to the server or save to disk at this stage.
-struct PhotoSummary: Decodable {
+struct PhotoSummary: Decodable, Equatable {
     let id: String
     let title: String
     let thumbnailURL: URL?
@@ -79,5 +79,19 @@ struct PhotoSummary: Decodable {
                 thumbnailURL = nil
             }
         }
+    }
+    
+    // Custom initializer for testing and other manual creation
+    init(id: String, title: String, thumbnailURL: URL?) {
+        self.id = id
+        self.title = title
+        self.thumbnailURL = thumbnailURL
+    }
+    
+    // Conforming to Equatable for comparison during tests
+    static func == (lhs: PhotoSummary, rhs: PhotoSummary) -> Bool {
+        return lhs.id == rhs.id &&
+               lhs.title == rhs.title &&
+               lhs.thumbnailURL == rhs.thumbnailURL
     }
 }
