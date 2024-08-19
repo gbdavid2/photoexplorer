@@ -15,7 +15,7 @@ protocol PhotoServiceProtocol {
     /// - Returns: An array of `PhotoSummary` objects.
     /// - Throws: A `NetworkError` if the fetch operation fails.
     func fetchPhotos() async throws -> [PhotoSummary]
-
+    
     /// Fetches detailed information about a specific photo.
     ///
     /// - Parameter id: The ID of the photo to fetch details for.
@@ -29,7 +29,7 @@ protocol PhotoServiceProtocol {
 struct PhotoService: PhotoServiceProtocol {
     private let apiKey: String
     private let networkClient: NetworkClient
-
+    
     /// Initializes the `PhotoService` with a specified network client.
     ///
     /// - Parameter networkClient: A `NetworkClient` used to perform network requests. Defaults to `URLSessionClient`.
@@ -60,12 +60,12 @@ struct PhotoService: PhotoServiceProtocol {
             guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
                 throw NetworkError.invalidResponse
             }
-
+            
             // Ensure data is not empty
             guard !data.isEmpty else {
                 throw NetworkError.noData
             }
-
+            
             // Decode the response data into `PhotoResponse`
             let decoder = JSONDecoder()
             let photoResponse = try decoder.decode(PhotoResponse.self, from: data)
@@ -83,47 +83,44 @@ struct PhotoService: PhotoServiceProtocol {
     }
     
     /// Fetches detailed information about a specific photo from the Flickr API.
-        ///
-        /// - Parameter id: The ID of the photo to fetch details for.
-        /// - Returns: A `PhotoDetail` object containing detailed information about the photo.
-        /// - Throws: A `NetworkError` in case of failure (e.g., invalid URL, network issues, decoding errors).
-        func fetchPhotoDetail(for id: String) async throws -> PhotoDetail {
-            let urlString = "https://api.flickr.com/services/rest/?method=flickr.photos.getInfo&api_key=\(apiKey)&photo_id=\(id)&format=json&nojsoncallback=1"
+    ///
+    /// - Parameter id: The ID of the photo to fetch details for.
+    /// - Returns: A `PhotoDetail` object containing detailed information about the photo.
+    /// - Throws: A `NetworkError` in case of failure (e.g., invalid URL, network issues, decoding errors).
+    func fetchPhotoDetail(for id: String) async throws -> PhotoDetail {
+        let urlString = "https://api.flickr.com/services/rest/?method=flickr.photos.getInfo&api_key=\(apiKey)&photo_id=\(id)&format=json&nojsoncallback=1"
+        
+        guard let url = URL(string: urlString) else {
+            throw NetworkError.invalidURL
+        }
+        
+        do {
+            let (data, response) = try await networkClient.fetchData(from: url)
             
-            // Ensure the URL is valid
-            guard let url = URL(string: urlString) else {
-                throw NetworkError.invalidURL
+            guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
+                throw NetworkError.invalidResponse
             }
             
+            guard !data.isEmpty else {
+                throw NetworkError.noData
+            }
+                        
             do {
-                // Fetch data from the network client
-                let (data, response) = try await networkClient.fetchData(from: url)
-                
-                // Validate the HTTP response status code
-                guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
-                    throw NetworkError.invalidResponse
-                }
-
-                // Ensure data is not empty
-                guard !data.isEmpty else {
-                    throw NetworkError.noData
-                }
-
-                // Decode the response data into `PhotoDetail`
                 let decoder = JSONDecoder()
-                let photoDetail = try decoder.decode(PhotoDetail.self, from: data)
+                let photoDetailResponse = try decoder.decode(PhotoDetailResponse.self, from: data)
                 
-                // Return the detailed photo information
-                return photoDetail
+                // Extract the actual PhotoDetail from the response
+                print("Decoded PhotoDetail: \(photoDetailResponse.photo)")
+                return photoDetailResponse.photo
                 
             } catch let decodingError as DecodingError {
-                // Handle decoding errors specifically
                 throw NetworkError.decodingError(decodingError)
-            } catch {
-                // Handle any other errors
-                throw NetworkError.requestFailed(error)
             }
+            
+        } catch {
+            throw NetworkError.requestFailed(error)
         }
+    }
 }
 
 /// `MockPhotoService` is a mock implementation of `PhotoServiceProtocol`.
@@ -132,7 +129,7 @@ struct MockPhotoService: PhotoServiceProtocol {
     var mockPhotos: [PhotoSummary]?
     var mockPhotoDetail: PhotoDetail?
     var mockError: NetworkError?
-
+    
     /// Simulates fetching photos. Returns either the mock photos or throws a mock error.
     ///
     /// - Returns: An array of `PhotoSummary` objects.
@@ -143,7 +140,7 @@ struct MockPhotoService: PhotoServiceProtocol {
         }
         return mockPhotos ?? []
     }
-
+    
     /// Simulates fetching detailed information about a specific photo. Returns either the mock photo detail or throws a mock error.
     ///
     /// - Parameter id: The ID of the photo to fetch details for.
@@ -188,7 +185,7 @@ struct MockDelayingPhotoService: PhotoServiceProtocol {
         
         return mockPhotos ?? []
     }
-
+    
     /// Simulates fetching detailed information about a specific photo with a delay. After the delay, it returns the mock photo detail.
     ///
     /// - Parameter id: The ID of the photo to fetch details for.
