@@ -47,6 +47,7 @@ class PhotoDetailViewModel: ObservableObject {
             let formattedDetail = formatPhotoDetail(detail)
             photoDetail = formattedDetail
         } catch {
+            // Handle various network errors by setting an appropriate error message
             if let networkError = error as? NetworkError {
                 switch networkError {
                 case .invalidURL:
@@ -68,17 +69,22 @@ class PhotoDetailViewModel: ObservableObject {
         isLoading = false
     }
     
+    /// Formats the `PhotoDetail` instance by converting the `dateTaken` field into a more user-friendly format.
+    ///
+    /// - Parameter detail: The `PhotoDetail` object containing the original data.
+    /// - Returns: A new `PhotoDetail` instance with the formatted date.
     private func formatPhotoDetail(_ detail: PhotoDetail) -> PhotoDetail {
         let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss" // Assuming this will always be the format returned by the API
-        
+        dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss" // Original format from the API
+
         var formattedDate = detail.dateTaken
         if let date = dateFormatter.date(from: detail.dateTaken) {
+            // Set the user-friendly date format
             dateFormatter.dateStyle = .medium
             dateFormatter.timeStyle = .short
             formattedDate = dateFormatter.string(from: date)
         }
-        
+
         // Return a new PhotoDetail instance with the formatted date
         return PhotoDetail(
             id: detail.id,

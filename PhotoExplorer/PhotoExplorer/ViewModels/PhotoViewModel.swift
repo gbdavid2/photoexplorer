@@ -34,11 +34,15 @@ class PhotoViewModel: ObservableObject {
     /// The service responsible for fetching photos from the Flickr API. Injected via dependency injection to allow for easy testing and flexibility.
     private let photoService: PhotoServiceProtocol
 
+    /// Initializes the `PhotoViewModel` with a specified photo service.
+    ///
+    /// - Parameter photoService: The service used to fetch photos. Defaults to `PhotoService`.
     init(photoService: PhotoServiceProtocol = PhotoService()) {
         self.photoService = photoService
     }
 
     /// Fetches photos from the Flickr API using the `PhotoService`.
+    ///
     /// This method updates the `photos` property with the fetched data or sets the `errorMessage` if the request fails.
     /// It also manages the `isLoading` state to indicate when the fetch operation is in progress.
     func fetchPhotos() async {
@@ -49,6 +53,7 @@ class PhotoViewModel: ObservableObject {
             let fetchedPhotos = try await photoService.fetchPhotos()
             photos = fetchedPhotos
         } catch {
+            // Handle various network errors by setting an appropriate error message
             if let networkError = error as? NetworkError {
                 switch networkError {
                 case .invalidURL:
