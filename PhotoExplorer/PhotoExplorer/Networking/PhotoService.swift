@@ -8,7 +8,7 @@
 import Foundation
 
 /// The `PhotoServiceProtocol` defines the interface for fetching photos and photo details.
-/// This allows us to mock our object so that we can use it in tests.
+/// This allows for dependency injection, enabling easy mocking and testing of the service.
 protocol PhotoServiceProtocol {
     /// Fetches an array of `PhotoSummary` objects from a remote source.
     ///
@@ -24,8 +24,8 @@ protocol PhotoServiceProtocol {
     func fetchPhotoDetail(for id: String) async throws -> PhotoDetail
 }
 
-/// `PhotoService` is responsible for interacting with the Flickr API to fetch photos.
-/// This struct conforms to `PhotoServiceProtocol` and provides the actual implementation for fetching photos.
+/// `PhotoService` is responsible for interacting with the Flickr API to fetch photos and their details.
+/// This struct conforms to `PhotoServiceProtocol` and provides the actual implementation.
 struct PhotoService: PhotoServiceProtocol {
     private let apiKey: String
     private let networkClient: NetworkClient
@@ -47,37 +47,29 @@ struct PhotoService: PhotoServiceProtocol {
     func fetchPhotos() async throws -> [PhotoSummary] {
         let urlString = "https://api.flickr.com/services/rest/?method=flickr.photos.search&api_key=\(apiKey)&tags=Yorkshire&format=json&nojsoncallback=1&safe_search=1"
         
-        // Ensure the URL is valid
         guard let url = URL(string: urlString) else {
             throw NetworkError.invalidURL
         }
         
         do {
-            // Fetch data from the network client
             let (data, response) = try await networkClient.fetchData(from: url)
             
-            // Validate the HTTP response status code
             guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
                 throw NetworkError.invalidResponse
             }
             
-            // Ensure data is not empty
             guard !data.isEmpty else {
                 throw NetworkError.noData
             }
             
-            // Decode the response data into `PhotoResponse`
             let decoder = JSONDecoder()
             let photoResponse = try decoder.decode(PhotoResponse.self, from: data)
             
-            // Return the array of photos from the response
             return photoResponse.photos.photo
             
         } catch let decodingError as DecodingError {
-            // Handle decoding errors specifically
             throw NetworkError.decodingError(decodingError)
         } catch {
-            // Handle any other errors
             throw NetworkError.requestFailed(error)
         }
     }
@@ -104,19 +96,14 @@ struct PhotoService: PhotoServiceProtocol {
             guard !data.isEmpty else {
                 throw NetworkError.noData
             }
-                        
-            do {
-                let decoder = JSONDecoder()
-                let photoDetailResponse = try decoder.decode(PhotoDetailResponse.self, from: data)
-                
-                // Extract the actual PhotoDetail from the response
-                print("Decoded PhotoDetail: \(photoDetailResponse.photo)")
-                return photoDetailResponse.photo
-                
-            } catch let decodingError as DecodingError {
-                throw NetworkError.decodingError(decodingError)
-            }
             
+            let decoder = JSONDecoder()
+            let photoDetailResponse = try decoder.decode(PhotoDetailResponse.self, from: data)
+            
+            return photoDetailResponse.photo
+            
+        } catch let decodingError as DecodingError {
+            throw NetworkError.decodingError(decodingError)
         } catch {
             throw NetworkError.requestFailed(error)
         }
@@ -180,9 +167,7 @@ struct MockDelayingPhotoService: PhotoServiceProtocol {
     /// - Returns: An array of `PhotoSummary` objects.
     /// - Throws: No error is thrown by this mock implementation.
     func fetchPhotos() async throws -> [PhotoSummary] {
-        // Simulate network delay
         try? await Task.sleep(nanoseconds: delay)
-        
         return mockPhotos ?? []
     }
     
@@ -192,9 +177,7 @@ struct MockDelayingPhotoService: PhotoServiceProtocol {
     /// - Returns: A `PhotoDetail` object containing detailed information about the photo.
     /// - Throws: No error is thrown by this mock implementation.
     func fetchPhotoDetail(for id: String) async throws -> PhotoDetail {
-        // Simulate network delay
         try? await Task.sleep(nanoseconds: delay)
-        
         guard let detail = mockPhotoDetail else {
             throw NetworkError.noData
         }
