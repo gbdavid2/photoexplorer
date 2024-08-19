@@ -1,30 +1,42 @@
 import SwiftUI
 
 /// `PhotoGridView` is a view that displays a scrollable grid of photos fetched from the Flickr API.
-/// It manages the loading and error states and presents the photo grid.
-/// Navigation and other UI elements are managed by the parent view that embeds this view.
+/// It handles the presentation of the photo grid and manages loading and error states.
+/// The view also communicates user interactions, such as photo taps, back to the parent view through a closure.
 struct PhotoGridView: View {
     @StateObject private var viewModel: PhotoViewModel
+    let onPhotoTap: (PhotoSummary) -> Void
 
-    /// Initializes the `PhotoGridView` with a `PhotoViewModel`.
-    /// - Parameter viewModel: The view model responsible for fetching and managing the photo data.
-    init(viewModel: PhotoViewModel) {
+    /// Initializes the `PhotoGridView` with a `PhotoViewModel` and a tap action closure.
+    ///
+    /// - Parameters:
+    ///   - viewModel: The view model responsible for fetching and managing the photo data.
+    ///   - onPhotoTap: A closure that is triggered when a photo is tapped.
+    init(viewModel: PhotoViewModel, onPhotoTap: @escaping (PhotoSummary) -> Void) {
         _viewModel = StateObject(wrappedValue: viewModel)
+        self.onPhotoTap = onPhotoTap
     }
 
     var body: some View {
         Group {
             if viewModel.isLoading {
+                // Display a loading indicator while photos are being fetched.
                 ProgressView("Loading Photos...")
             } else if let errorMessage = viewModel.errorMessage {
+                // Display an error message if the fetch operation fails.
                 Text(errorMessage)
                     .foregroundColor(.red)
                     .multilineTextAlignment(.center)
             } else {
+                // Display a grid of photos once data is successfully fetched.
                 ScrollView {
                     LazyVGrid(columns: gridLayout, spacing: 20) {
                         ForEach(viewModel.photos) { photo in
                             PhotoTileView(photo: photo)
+                                .onTapGesture {
+                                    // Trigger the onPhotoTap closure when a photo is tapped.
+                                    onPhotoTap(photo)
+                                }
                         }
                     }
                     .padding()
@@ -32,6 +44,7 @@ struct PhotoGridView: View {
             }
         }
         .task {
+            // Fetch photos when the view appears.
             await viewModel.fetchPhotos()
         }
     }
@@ -52,5 +65,7 @@ struct PhotoGridView: View {
     ]))
 
     // Previewing the PhotoGridView with the mock view model.
-    PhotoGridView(viewModel: mockViewModel)
+    PhotoGridView(viewModel: mockViewModel) { photo in
+        print("Photo tapped: \(photo.title)")
+    }
 }

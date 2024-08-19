@@ -77,47 +77,30 @@ struct PhotoDetailView: View {
 
             // Close button
             Button(action: onClose) {
-                Image(systemName: "xmark.circle.fill")
-                    .foregroundColor(.gray)
-                    .padding()
-            }
-            .offset(x: -10, y: 10)
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundColor(.gray)
+                                .font(.title2)
+                                .padding(6)
+                                .background(Color(.systemBackground).opacity(0.7))
+                                .clipShape(Circle())
+                                .shadow(radius: 4)
+                        }
+                        .offset(x: -10, y: 10)
+                        .accessibilityLabel("Close Detail View")
         }
-        .transition(.move(edge: .bottom))
-        .animation(.spring(), value: photoDetail)
     }
 }
 
 #Preview {
-    // Creating a sample `PhotoDetail` for the preview
-    let sampleDetail = PhotoDetail(
-        id: "12345",
-        title: "Sample Photo Title",
-        description: "This is a sample description for the photo. It provides more context and background about the photo, explaining what the viewer is seeing.",
-        owner: "John Doe",
-        dateTaken: "2024-08-20 12:34:56",
-        imageURL: URL(string: "https://via.placeholder.com/400")
-    )
-
     // Previewing the `PhotoDetailView` with the sample data
-    PhotoDetailView(photoDetail: sampleDetail) {
+    PhotoDetailView(photoDetail: PhotoDetail.sample) {
         // Action to perform when the close button is tapped (no-op for preview)
     }
 }
 
 #Preview {
-    // Creating a sample `PhotoDetail` for the preview
-    let sampleDetail = PhotoDetail(
-        id: "12345",
-        title: "Sample Photo Title",
-        description: "This is a sample description for the photo. It provides more context and background about the photo, explaining what the viewer is seeing.",
-        owner: "John Doe",
-        dateTaken: "2024-08-20 12:34:56",
-        imageURL: URL(string: "https://via.placeholder.com/400")
-    )
-
     // Previewing the `PhotoDetailView` with the sample data
-    PhotoDetailView(photoDetail: sampleDetail) {
+    PhotoDetailView(photoDetail: PhotoDetail.sample) {
         // Action to perform when the close button is tapped (no-op for preview)
     }
     .preferredColorScheme(.dark)
