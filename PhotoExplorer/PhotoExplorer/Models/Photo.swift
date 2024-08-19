@@ -4,13 +4,22 @@
 //
 //  Created by David Garces on 16/08/2024.
 //
-// This file contains both the `Photo` and `PhotoResponse` structs.
-// They are included together to keep the project organized and avoid
-// unnecessary file proliferation since this is a small project.
+// This file contains the `Photo`, `PhotoSummary`, `PhotoResponse`, and `PhotoDetail` structs.
+// These models represent different aspects of the data returned by the Flickr API and are used
+// within the app to handle and display photo information.
 //
-// `PhotoResponse` represents the raw data received from the Flickr API,
-// while `Photo` is the model used within the app to work with this data.
+// - `PhotoResponse`: Represents the top-level response structure from the Flickr API when searching for photos.
+//    It includes metadata about the search and a list of `PhotoSummary` objects.
 //
+// - `PhotoSummary`: Represents the summary information of a photo, including its ID, title, and thumbnail URL.
+//    This struct is primarily used for displaying a grid of photos.
+//
+// - `PhotoDetail`: Represents detailed information about a specific photo, fetched from the Flickr API when
+//    the user selects a photo for more information. It includes details such as the title, description,
+//    owner, date taken, and the URL for the photo.
+//
+// These structs are kept together in this file to maintain organization and avoid unnecessary file proliferation,
+// making it easier to manage and understand the data flow within the app.
 
 import Foundation
 
@@ -86,7 +95,7 @@ struct PhotoSummary: Decodable, Equatable, Identifiable {
 
 /// `PhotoDetail` represents the minimal detailed information of a photo fetched from the Flickr API.
 /// It contains only the most essential fields, such as the photo's ID, title, description, owner, date taken, and an image URL.
-struct PhotoDetail: Decodable {
+struct PhotoDetail: Decodable, Equatable {
     let id: String
     let title: String
     let description: String
